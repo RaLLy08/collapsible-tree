@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <style>
+    :root {
+        --light-gray: rgb(188, 188, 188);
+        --red: rgb(220,20,60);
+    }
+
+    body {
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-self: flex-start;
+        align-items: center;
+    }
+
+    .row {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        min-width: fit-content;
+    }
+
+    .block {
+        width: 80px;
+        height: 30px;
+        padding: 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        margin: 20px 120px 8px 0;
+        position: relative;
+    }
+    /* edit panel */
+    .block__panel {
+        right: 0;
+        top: 50%;
+        transform: translate(calc(100% + 10px), -50%);
+        position: absolute;
+        display: flex;
+        width: 85px;
+        justify-content: space-between;
+    }
+
+    .block__panel div {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        position: relative;
+    }
+    .block__panel :nth-child(1) {
+        background-color: var(--light-gray);
+    }
+
+    .block__panel :nth-child(1)::after {
+        content: "";
+        height: 50%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 2px;
+        background-color: white;
+        border-radius: 1px;
+        position: absolute;
+    }
+    .block__panel :nth-child(1)::before {
+        content: "";
+        width: 50%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 1px;
+        height: 2px;
+        background-color: white;
+        position: absolute;
+    }
+
+    .block__panel :nth-child(2) {
+        background-color: var(--light-gray);
+    }
+
+    .block__panel :nth-child(2)::after {
+        content: "";
+        height: 60%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+        width: 4px;
+        border-radius: 0.5px;
+        clip-path: polygon(100% 80%, 100% 0, 0 0, 0 80%, 50% 100%);
+        background-color: white;
+        position: absolute;
+    }
+
+    .block__panel :nth-child(3) {
+        background-color: var(--red);
+        transform: rotate(45deg);
+    }
+
+    .block__panel :nth-child(3)::after {
+        content: "";
+        height: 50%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 2px;
+        background-color: white;
+        border-radius: 1px;
+        position: absolute;
+    }
+
+    .block__panel :nth-child(3)::before {
+        content: "";
+        width: 50%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 1px;
+        height: 2px;
+        background-color: white;
+        position: absolute;
+    }
+    /* --- */
+
+  </style>
+  <body>
+    <div id="app"></div>
+    <script type="text/babel">
+        const getRandomColor = () => `#${Math.floor(Math.random()*16777215).toString(16)}`;
+       
+        function Contaiter({children, color, isRoot}) {
+            const [subCategories, setSubcategories] = React.useState([]);
+            const colorsRef = React.useRef({category: getRandomColor(), subCategories: getRandomColor()})
+            const style = { backgroundColor: color || colorsRef.current.category }
+
+            if (isRoot) {
+                style.border = '1px dashed';
+                style.backgroundColor = '#ffffff';
+            };
+
+            const handleBlockClock = () => {
+                setSubcategories(old => old.length ? [...old, old.at(-1)] : [1])
+            }
+
+            return (
+                <div className="container"> 
+                    { /* category */}
+                    <div className="row">
+                        <div className="container">
+                            <div onClick={handleBlockClock} style={style} className="block">
+                                {children}
+                                <div className="block__panel"> 
+                                    <div>
+                                    </div>
+                                    <div>
+                                    </div>
+                                    <div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                        { /* sub categories */}
+                        {!!subCategories.length && <div className="container"> 
+                            <div className="row">
+                                {subCategories.map(el => <Contaiter color={colorsRef.current.subCategories} subCategories={subCategories}>{el}</Contaiter>)}
+                            </div>
+                    </div>}
+                </div>
+            )
+        }   
+  
+
+        ReactDOM.createRoot(document.getElementById('app')).render(<Contaiter isRoot> Root </Contaiter>);
+    </script>
+  </body>
+</html>
