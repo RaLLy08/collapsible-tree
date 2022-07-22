@@ -386,20 +386,29 @@
             )
         }
 
-        function Contaiter({children, color, isSingle, isLast, isFirst, isRoot, setCategory, category, deleteCategory}) {
+        function Contaiter({isRoot, setCategories, category, categories, index}) {
             const [subCategories, setSubcategories] = React.useState([]);
-            const colorsRef = React.useRef({category: getRandomColor(), subCategories: getRandomColor()});
+            const subCategoriesColorRef = React.useRef(getRandomColor());
             const blockRef = React.useRef();
             const inputRef = React.useRef();
-            const blockStyle = { backgroundColor: color || colorsRef.current.category };
+            const blockStyle = { backgroundColor: category?.color || getRandomColor() };
+
             const isParent = !!subCategories.length;
 
-            const withPositionClass = (className) => {
+            const withPositionClasses = (className) => {
                 let newClass = "";
-                if (isLast) newClass+= ' last';
-                if (isFirst) newClass+= ' first';
-                if (isSingle) newClass+= ' single';
-                if (isRoot) newClass+= ' root';
+
+                if (isRoot) {
+                    newClass+= ' root single'
+                } else {
+                    const isFirst = !index;
+                    const isLast = index === categories.length - 1;
+                    const isSingle = !(categories.length - 1);
+
+                    if (isLast) newClass+= ' last';
+                    if (isFirst) newClass+= ' first';
+                    if (isSingle) newClass+= ' single';
+                };
 
                 return className + newClass;
             }
@@ -410,29 +419,50 @@
                 }
             }, [category?.editMode])
 
+            const setCategory = (replacer) => {
+                setCategories(prev => {
+                    const newState = [...prev];
+
+                    if (replacer) {
+                        newState.splice(index, 1, replacer);
+                    } else {
+                        newState.splice(index, 1);
+                    }
+
+                    return newState;
+                })
+            }
+
+            const deleteCategory = () => {
+                setCategory()
+            }
+
+
             const handleAddClick = () => {
                 const defaultCategory =  {
                     value: "",
                     editMode: true,
-                }
+                    color: subCategoriesColorRef.current,
+                };
 
                 setSubcategories(old => old.length ? [...old, defaultCategory] : [
                     defaultCategory
-                ])
+                ]);
             }
 
             const handleEditClick = () => {
                 setCategory({
                     ...category,
                     editMode: true
-                })
+                });
             }
 
             const handleSaveClick = () => {
                 setCategory({
+                    ...category,
                     editMode: false,
                     value: inputRef.current.value
-                })
+                });
             }
 
             const handleCancelClick = () => {
@@ -446,8 +476,10 @@
                 deleteCategory();
             }
 
+            const value = isRoot ? 'Categories' : category.value;
+
             return (
-                <div className={withPositionClass("container subcategory")}> 
+                <div className={withPositionClasses("container subcategory")}> 
                     { /* category */}
                     <div ref={blockRef} className="row">
                         <div className="container">
@@ -456,21 +488,20 @@
                                 {category?.editMode ?
                                     <input
                                         ref={el => (inputRef.current = el)}
-                                        defaultValue={children}
+                                        defaultValue={category.value}
                                         style={{backgroundColor: blockStyle.backgroundColor}} 
                                         className="block__input"
-                                    /> : children
+                                    /> : value
                                 }
-                               
                                 {category?.editMode ? 
                                     <SavePanel 
                                         onSaveClick={handleSaveClick}
                                         onCancelClick={handleCancelClick}
                                     /> : <EditPanel
-                                            onAddClick={handleAddClick}
-                                            onEditClick={handleEditClick}
-                                            onDeleteClick={handleDeleteClick}
-                                            isRoot={isRoot}
+                                        onAddClick={handleAddClick}
+                                        onEditClick={handleEditClick}
+                                        onDeleteClick={handleDeleteClick}
+                                        isRoot={isRoot}
                                      />}
                                 {isParent && <span className="block__tail"></span>} 
                             </div>
@@ -478,40 +509,15 @@
                     </div>
                         {!!subCategories.length && <div className="container"> 
                             <div className="row">
-                                {subCategories.map((el, i, arr) => {
-                                    const handleSetCategory = (replacer) => {
-                                        setSubcategories(prev => {
-                                            const newState = [...prev];
-                                            newState.splice(i, 1, replacer)
-
-                                            return newState;
-                                        })
-                                    }
-
-                                    const handleDeleteCategory = () => {
-                                        setSubcategories(prev => {
-                                            const newState = [...prev];
-                                            newState.splice(i, 1)
-
-                                            return newState;
-                                        })
-                                    }
-
-                                    return <Contaiter
+                                {subCategories.map((el, i, arr) => 
+                                    <Contaiter
                                         key={i}
-                                        isFirst={!i}
-                                        setCategory={handleSetCategory}
-                                        deleteCategory={handleDeleteCategory}
-                                        isSingle={!(arr.length - 1)}
-                                        isLast={i === (arr.length - 1)} 
-                                        color={colorsRef.current.subCategories} 
-                                        neighborCategories={arr}
+                                        setCategories={setSubcategories}
+                                        index={i}
+                                        categories={arr}
                                         category={el}
-                                    >
-                                        {el.value}
-                                    </Contaiter>
-
-                                })}
+                                    />
+                                )}
                             </div>
                     </div>}
                 </div>
@@ -519,7 +525,7 @@
         }   
   
 
-        ReactDOM.createRoot(document.getElementById('app')).render(<Draggable> <Contaiter isRoot isSingle> Categories </Contaiter> </Draggable> );
+        ReactDOM.createRoot(document.getElementById('app')).render(<Draggable> <Contaiter isRoot isSingle /> </Draggable> );
     </script>
   </body>
 </html>
