@@ -30,8 +30,11 @@
     .container {
         display: flex;
         flex-direction: column;
-        align-self: flex-start;
         align-items: center;
+    }
+
+    .container.subcategory {
+        align-self: flex-start;
     }
 
     .row {
@@ -42,7 +45,7 @@
     }
 
     .block {
-        width: 80px;
+        min-width: 80px;
         height: 20px;
         padding: 10px;
         border-radius: 2px;
@@ -54,8 +57,8 @@
     }
 
     .block__input {
+        max-width: 80px;
         outline: none;
-        width: 100%;
         color: white;
         border: none;
     }
@@ -312,7 +315,6 @@
 
         function Contaiter({children, color, isSingle, isLast, isFirst, isRoot, setCategory, category, deleteCategory}) {
             const [subCategories, setSubcategories] = React.useState([]);
-
             const colorsRef = React.useRef({category: getRandomColor(), subCategories: getRandomColor()});
             const blockRef = React.useRef();
             const inputRef = React.useRef();
@@ -329,11 +331,16 @@
                 return className + newClass;
             }
 
+            React.useEffect( () => {
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                }
+            }, [category?.editMode])
+
             const handleAddClick = () => {
                 const defaultCategory =  {
                     value: "",
                     editMode: true,
-                    // color
                 }
 
                 setSubcategories(old => old.length ? [...old, defaultCategory] : [
@@ -342,7 +349,6 @@
             }
 
             const handleEditClick = () => {
-                inputRef.current?.focus();
                 setCategory({
                     ...category,
                     editMode: true
@@ -375,13 +381,12 @@
                             <div style={blockStyle} className='block'>
                                 {!isRoot && <span className="block__head"></span>} 
                                 {category?.editMode ?
-                                    <input 
-                                        ref={(el) => {
-                                            el?.focus();
-                                            inputRef.current = el;
-                                        }} 
+                                    <input
+                                        ref={el => (inputRef.current = el)}
+                                        defaultValue={children}
                                         style={{backgroundColor: blockStyle.backgroundColor}} 
-                                        className="block__input"/> : children
+                                        className="block__input"
+                                    /> : children
                                 }
                                
                                 {category?.editMode ? 
@@ -389,16 +394,15 @@
                                         onSaveClick={handleSaveClick}
                                         onCancelClick={handleCancelClick}
                                     /> : <EditPanel
-                                        onAddClick={handleAddClick}
-                                        onEditClick={handleEditClick}
-                                        onDeleteClick={handleDeleteClick}
-                                        isRoot={isRoot}
+                                            onAddClick={handleAddClick}
+                                            onEditClick={handleEditClick}
+                                            onDeleteClick={handleDeleteClick}
+                                            isRoot={isRoot}
                                      />}
                                 {isParent && <span className="block__tail"></span>} 
                             </div>
                         </div>
                     </div>
-                        { /* sub categories */}
                         {!!subCategories.length && <div className="container"> 
                             <div className="row">
                                 {subCategories.map((el, i, arr) => {
@@ -431,7 +435,6 @@
                                         neighborCategories={arr}
                                         category={el}
                                     >
-                                        { /* position, array... */}
                                         {el.value}
                                     </Contaiter>
 
