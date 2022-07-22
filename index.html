@@ -12,6 +12,9 @@
     :root {
         --light-gray: rgb(188, 188, 188);
         --red: rgb(220,20,60);
+        --light-green: rgb(57, 209, 57);
+        --green: green;
+        --light-green: rgb(57, 209, 57);
         --block-margin-right: 110px;
         --block-margin-top: 30px;
     }
@@ -48,6 +51,13 @@
         margin-right: var(--block-margin-right);
         position: relative;
 
+    }
+
+    .block__input {
+        outline: none;
+        width: 100%;
+        color: white;
+        border: none;
     }
 
     /* root block */
@@ -111,28 +121,30 @@
 
     /* --- */
 
+
+
     /* edit panel */
-    .block__panel {
+    .block__edit_panel, .block__save_panel {
         right: 0;
         top: 50%;
         transform: translate(calc(100% + 10px), -50%);
         position: absolute;
         display: flex;
-        width: 85px;
+        gap: 5px;
         justify-content: space-between;
     }
 
-    .block__panel div {
+    .block__edit_panel div, .block__save_panel div {
         width: 24px;
         height: 24px;
         border-radius: 50%;
         position: relative;
     }
-    .block__panel :nth-child(1) {
+    .block__edit_panel :nth-child(1) {
         background-color: var(--light-gray);
     }
 
-    .block__panel :nth-child(1)::after {
+    .block__edit_panel :nth-child(1)::after {
         content: "";
         height: 50%;
         left: 50%;
@@ -143,7 +155,7 @@
         border-radius: 1px;
         position: absolute;
     }
-    .block__panel :nth-child(1)::before {
+    .block__edit_panel :nth-child(1)::before {
         content: "";
         width: 50%;
         left: 50%;
@@ -155,11 +167,11 @@
         position: absolute;
     }
 
-    .block__panel :nth-child(2) {
+    .block__edit_panel :nth-child(2) {
         background-color: var(--light-gray);
     }
 
-    .block__panel :nth-child(2)::after {
+    .block__edit_panel :nth-child(2)::after {
         content: "";
         height: 60%;
         left: 50%;
@@ -172,12 +184,12 @@
         position: absolute;
     }
 
-    .block__panel :nth-child(3) {
+    .block__edit_panel :nth-child(3) {
         background-color: var(--red);
         transform: rotate(45deg);
     }
 
-    .block__panel :nth-child(3)::after {
+    .block__edit_panel :nth-child(3)::after {
         content: "";
         height: 50%;
         left: 50%;
@@ -189,7 +201,7 @@
         position: absolute;
     }
 
-    .block__panel :nth-child(3)::before {
+    .block__edit_panel :nth-child(3)::before {
         content: "";
         width: 50%;
         left: 50%;
@@ -202,16 +214,109 @@
     }
     /* --- */
 
+    /* safe panel */
+    .block__save_panel :nth-child(1) {
+        background-color: var(--green);
+        transform: rotate(45deg);
+    }
+
+    .block__save_panel :nth-child(1)::after {
+        content: "";
+        height: 50%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 2px;
+        background-color: white;
+        border-radius: 1px;
+        position: absolute;
+    }
+
+    .block__save_panel :nth-child(1)::before {
+        content: "";
+        width: 50%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 1px;
+        height: 2px;
+        background-color: white;
+        position: absolute;
+    }
+
+    .block__save_panel :nth-child(2) {
+        background-color: var(--light-green);
+    }
+
+    .block__save_panel :nth-child(2)::after {
+        content: "";
+        width: 40%;
+        left: 50%;
+        top: 45%;
+        height: 20%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        border-bottom: 3px solid white;
+        border-left: 3px solid white;
+        position: absolute;
+    }
+
+    /* --- */
   </style>
   <body>
     <div id="app"></div>
     <script type="text/babel">
-        const getRandomColor = () => `#${Math.floor(Math.random()*16777215).toString(16)}`;
-       
-        function Contaiter({children, color, isSingle, isLast, isFirst, isRoot}) {
+        const getRandomColor = () => {
+            const x = Math.floor(Math.random() * 256);
+            const y = 100 + Math.floor(Math.random() * 156);
+            const z = 50 + Math.floor(Math.random() * 206);
+            
+            return "rgb(" + x + "," + y + "," + z + ")";
+        };
+        
+        const EditPanel = ({
+            onAddClick,
+            onEditClick,
+            onDeleteClick,
+            isRoot
+        }) => {
+
+            return (
+                <div className="block__edit_panel"> 
+                    <div onClick={onAddClick}>
+                    </div>
+                    {!isRoot && (
+                        <>
+                            <div onClick={onEditClick}>
+                            </div>
+                            <div onClick={onDeleteClick}>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )
+        }
+        const SavePanel = ({
+            onSaveClick,
+            onCancelClick,
+        }) => {
+
+            return (
+                <div className="block__save_panel"> 
+                    <div onClick={onCancelClick}>
+                    </div>
+                    <div onClick={onSaveClick}>
+                    </div>
+                </div>
+            )
+        }
+
+        function Contaiter({children, color, isSingle, isLast, isFirst, isRoot, setCategory, category, deleteCategory}) {
             const [subCategories, setSubcategories] = React.useState([]);
+
             const colorsRef = React.useRef({category: getRandomColor(), subCategories: getRandomColor()});
-            const style = { backgroundColor: color || colorsRef.current.category };
+            const blockRef = React.useRef();
+            const inputRef = React.useRef();
+            const blockStyle = { backgroundColor: color || colorsRef.current.category };
             const isParent = !!subCategories.length;
 
             const withPositionClass = (className) => {
@@ -224,26 +329,71 @@
                 return className + newClass;
             }
 
-            const handleBlockClock = () => {
-                setSubcategories(old => old.length ? [...old, old.at(-1)] : [1])
+            const handleAddClick = () => {
+                const defaultCategory =  {
+                    value: "",
+                    editMode: true,
+                    // color
+                }
+
+                setSubcategories(old => old.length ? [...old, defaultCategory] : [
+                    defaultCategory
+                ])
+            }
+
+            const handleEditClick = () => {
+                inputRef.current?.focus();
+                setCategory({
+                    ...category,
+                    editMode: true
+                })
+            }
+
+            const handleSaveClick = () => {
+                setCategory({
+                    editMode: false,
+                    value: inputRef.current.value
+                })
+            }
+
+            const handleCancelClick = () => {
+                setCategory({
+                    ...category,
+                    editMode: false,
+                })
+            }
+
+            const handleDeleteClick = () => {
+                deleteCategory();
             }
 
             return (
                 <div className={withPositionClass("container subcategory")}> 
                     { /* category */}
-                    <div className="row">
+                    <div ref={blockRef} className="row">
                         <div className="container">
-                            <div onClick={handleBlockClock} style={style} className='block'>
+                            <div style={blockStyle} className='block'>
                                 {!isRoot && <span className="block__head"></span>} 
-                                    {children}
-                                    <div className="block__panel"> 
-                                        <div>
-                                        </div>
-                                        <div>
-                                        </div>
-                                        <div>
-                                        </div>
-                                    </div>
+                                {category?.editMode ?
+                                    <input 
+                                        ref={(el) => {
+                                            el?.focus();
+                                            inputRef.current = el;
+                                        }} 
+                                        style={{backgroundColor: blockStyle.backgroundColor}} 
+                                        className="block__input"/> : children
+                                }
+                               
+                                {category?.editMode ? 
+                                    <SavePanel 
+                                        onSaveClick={handleSaveClick}
+                                        onCancelClick={handleCancelClick}
+                                    /> : <EditPanel
+                                        onAddClick={handleAddClick}
+                                        onEditClick={handleEditClick}
+                                        onDeleteClick={handleDeleteClick}
+                                        isRoot={isRoot}
+                                     />}
                                 {isParent && <span className="block__tail"></span>} 
                             </div>
                         </div>
@@ -251,17 +401,41 @@
                         { /* sub categories */}
                         {!!subCategories.length && <div className="container"> 
                             <div className="row">
-                                {subCategories.map((el, i, arr) => 
-                                    <Contaiter
+                                {subCategories.map((el, i, arr) => {
+                                    const handleSetCategory = (replacer) => {
+                                        setSubcategories(prev => {
+                                            const newState = [...prev];
+                                            newState.splice(i, 1, replacer)
+
+                                            return newState;
+                                        })
+                                    }
+
+                                    const handleDeleteCategory = () => {
+                                        setSubcategories(prev => {
+                                            const newState = [...prev];
+                                            newState.splice(i, 1)
+
+                                            return newState;
+                                        })
+                                    }
+
+                                    return <Contaiter
+                                        key={i}
                                         isFirst={!i}
+                                        setCategory={handleSetCategory}
+                                        deleteCategory={handleDeleteCategory}
                                         isSingle={!(arr.length - 1)}
                                         isLast={i === (arr.length - 1)} 
                                         color={colorsRef.current.subCategories} 
                                         neighborCategories={arr}
+                                        category={el}
                                     >
-                                        {el}
+                                        { /* position, array... */}
+                                        {el.value}
                                     </Contaiter>
-                                )}
+
+                                })}
                             </div>
                     </div>}
                 </div>
@@ -269,7 +443,7 @@
         }   
   
 
-        ReactDOM.createRoot(document.getElementById('app')).render(<Contaiter isRoot isSingle> Root </Contaiter>);
+        ReactDOM.createRoot(document.getElementById('app')).render(<Contaiter isRoot isSingle> Categories </Contaiter>);
     </script>
   </body>
 </html>
