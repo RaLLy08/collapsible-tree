@@ -49,7 +49,6 @@
         height: 20px;
         padding: 10px;
         border-radius: 2px;
-        cursor: pointer;
         margin-top: var(--block-margin-top);
         margin-right: var(--block-margin-right);
         position: relative;
@@ -142,6 +141,8 @@
         height: 24px;
         border-radius: 50%;
         position: relative;
+        cursor: pointer;
+
     }
     .block__edit_panel :nth-child(1) {
         background-color: var(--light-gray);
@@ -276,6 +277,78 @@
             return "rgb(" + x + "," + y + "," + z + ")";
         };
         
+        const Draggable = ({children, container=document}) => {
+            const [active, setActive] = React.useState(false);
+            const [translate, setTranslate] = React.useState({x: null, y: null});
+            const positionsRef = React.useRef({
+                initialX: null,
+                initialY: null,
+                currentX: null,
+                currentY: null,
+                xOffset: 0,
+                yOffset: 0,
+            })
+
+            function dragStart(e) {
+                positionsRef.current.initialX = e.clientX - positionsRef.current.xOffset;
+                positionsRef.current.initialY = e.clientY - positionsRef.current.yOffset;
+
+                setActive(true);
+            } 
+
+            function dragEnd() {
+                positionsRef.current.initialX = positionsRef.current.currentX;
+                positionsRef.current.initialY = positionsRef.current.currentY;
+
+                setActive(false);
+            }
+
+            function drag(e) {
+                if (active) {
+                    positionsRef.current.currentX = e.clientX - positionsRef.current.initialX;
+                    positionsRef.current.currentY = e.clientY - positionsRef.current.initialY;
+
+                    positionsRef.current.xOffset = positionsRef.current.currentX;
+                    positionsRef.current.yOffset = positionsRef.current.currentY;
+
+                    setTranslate({
+                    x: positionsRef.current.currentX,
+                    y: positionsRef.current.currentY
+                    });
+                }
+            }
+
+            React.useEffect(() => {
+                container.onmousemove = drag;
+                container.onmouseup = dragEnd;
+                container.ontouchmove = (e) => drag(e.touches[0]);
+                container.ontouchend = dragEnd;
+            }, [active, container]);
+
+            return (
+                <div
+                    style={
+                    {
+                        transform: `translate(${
+                        translate.x
+                        }px, ${translate.y}px)`,
+                        cursor: active ? "grabbing" : "grab"
+                    }
+                    }
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        dragStart(e);
+                    }}
+                    onTouchStart={(e) => {
+                        dragStart(e.touches[0]);
+                    }}
+                    draggable={false}
+                >
+                    {children}
+                </div>
+            );
+      };
+
         const EditPanel = ({
             onAddClick,
             onEditClick,
@@ -446,7 +519,7 @@
         }   
   
 
-        ReactDOM.createRoot(document.getElementById('app')).render(<Contaiter isRoot isSingle> Categories </Contaiter>);
+        ReactDOM.createRoot(document.getElementById('app')).render(<Draggable> <Contaiter isRoot isSingle> Categories </Contaiter> </Draggable> );
     </script>
   </body>
 </html>
