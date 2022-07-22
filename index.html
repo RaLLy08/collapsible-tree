@@ -31,11 +31,45 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        transition: 0.4s ease;
+
     }
+    /* animations */
+    .container.root {
+        transition: 0.4s ease;
+    }
+
+    .container.animate-from.root {
+        transform: scale(0);
+    }
+
+    .container.animate-to.root {
+        transform: scale(1);
+    }
+
+    .container.animate-from {
+        opacity: 0;
+    }
+
+    .container.animate-to {
+        opacity: 1;
+    }
+
+    .container.animate-from.last:not(.single) {
+        transform: translateX(30px);
+    }
+
+    .container.animate-to.last:not(.single) {
+        transform: translateX(0);
+    }
+
 
     .container.subcategory {
         align-self: flex-start;
     }
+
+    /* --- */
+
 
     .row {
         display: flex;
@@ -276,6 +310,26 @@
             
             return "rgb(" + x + "," + y + "," + z + ")";
         };
+
+        const useMountTransition = (isMounted, unmountDelay) => {
+            const [hasTransitionedIn, setHasTransitionedIn] = React.useState(false);
+
+            React.useEffect(() => {
+                let timeoutId;
+
+                if (isMounted && !hasTransitionedIn) {
+                    setHasTransitionedIn(true);
+                } else if (!isMounted && hasTransitionedIn) {
+                    timeoutId = setTimeout(() => setHasTransitionedIn(false), unmountDelay);
+                }
+
+                return () => {
+                    clearTimeout(timeoutId);
+                }
+            }, [unmountDelay, isMounted, hasTransitionedIn]);
+
+            return hasTransitionedIn;
+        }
         
         const Draggable = ({children, container=document}) => {
             const [active, setActive] = React.useState(false);
@@ -392,6 +446,7 @@
             const blockRef = React.useRef();
             const inputRef = React.useRef();
             const blockStyle = { backgroundColor: category?.color || getRandomColor() };
+            const hasTransitionedIn = useMountTransition(true, 1000);
 
             const isParent = !!subCategories.length;
 
@@ -477,9 +532,10 @@
             }
 
             const value = isRoot ? 'Categories' : category.value;
+            const animationClass = hasTransitionedIn ? " animate-to" : " animate-from";
 
             return (
-                <div className={withPositionClasses("container subcategory")}> 
+                <div className={withPositionClasses("container subcategory") + animationClass}> 
                     { /* category */}
                     <div ref={blockRef} className="row">
                         <div className="container">
@@ -507,7 +563,7 @@
                             </div>
                         </div>
                     </div>
-                        {!!subCategories.length && <div className="container"> 
+                        {!!subCategories.length && hasTransitionedIn && <div className="container"> 
                             <div className="row">
                                 {subCategories.map((el, i, arr) => 
                                     <Contaiter
