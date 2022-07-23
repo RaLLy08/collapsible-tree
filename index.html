@@ -355,6 +355,7 @@
             function dragStart(e) {
                 if (e.target === dragAreaRef.current) {
                     setCursor("grabbing");
+                    e.preventDefault()
                 }
 
                 if (e.target !== dragAreaRef.current) return;
