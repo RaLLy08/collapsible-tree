@@ -332,9 +332,10 @@
             return hasTransitionedIn;
         }
         
-        const Draggable = ({children, container=document}) => {
+        const Draggable = ({children, container=document, dragAreaRef}) => {
             const [active, setActive] = React.useState(false);
             const [translate, setTranslate] = React.useState({x: null, y: null});
+            const [cursor, setCursor] = React.useState('auto')
             const positionsRef = React.useRef({
                 initialX: null,
                 initialY: null,
@@ -344,14 +345,31 @@
                 yOffset: 0,
             })
 
+            const style = {
+                transform: `translate(${
+                        translate.x
+                        }px, ${translate.y}px)`,
+                cursor:cursor
+            }
+
             function dragStart(e) {
+                if (e.target === dragAreaRef.current) {
+                    setCursor("grabbing");
+                }
+
+                if (e.target !== dragAreaRef.current) return;
+                setActive(true);
+
                 positionsRef.current.initialX = e.clientX - positionsRef.current.xOffset;
                 positionsRef.current.initialY = e.clientY - positionsRef.current.yOffset;
 
-                setActive(true);
             } 
 
-            function dragEnd() {
+            function dragEnd(e) {
+                if (e.target === dragAreaRef.current) {
+                    setCursor("grab");
+                };
+
                 positionsRef.current.initialX = positionsRef.current.currentX;
                 positionsRef.current.initialY = positionsRef.current.currentY;
 
@@ -359,6 +377,15 @@
             }
 
             function drag(e) {
+                if (e.target !== dragAreaRef.current && !active) {
+                    setCursor("auto");
+                    return
+                } else if (active) {
+                    setCursor("grabbing");
+                } else {
+                    setCursor("grab");
+                };
+
                 if (active) {
                     positionsRef.current.currentX = e.clientX - positionsRef.current.initialX;
                     positionsRef.current.currentY = e.clientY - positionsRef.current.initialY;
@@ -367,8 +394,8 @@
                     positionsRef.current.yOffset = positionsRef.current.currentY;
 
                     setTranslate({
-                    x: positionsRef.current.currentX,
-                    y: positionsRef.current.currentY
+                        x: positionsRef.current.currentX,
+                        y: positionsRef.current.currentY
                     });
                 }
             }
@@ -378,20 +405,13 @@
                 container.onmouseup = dragEnd;
                 container.ontouchmove = (e) => drag(e.touches[0]);
                 container.ontouchend = dragEnd;
+  
             }, [active, container]);
 
             return (
                 <div
-                    style={
-                    {
-                        transform: `translate(${
-                        translate.x
-                        }px, ${translate.y}px)`,
-                        cursor: active ? "grabbing" : "grab"
-                    }
-                    }
+                    style={style}
                     onMouseDown={(e) => {
-                        e.preventDefault();
                         dragStart(e);
                     }}
                     onTouchStart={(e) => {
@@ -441,7 +461,7 @@
             )
         }
 
-        function Contaiter({isRoot, setCategories, category, categories, index}) {
+        function Contaiter({isRoot, setCategories, category, categories, index, getRootBlockRef}) {
             const [subCategories, setSubcategories] = React.useState([]);
             const subCategoriesColorRef = React.useRef(getRandomColor());
             const blockRef = React.useRef();
@@ -474,6 +494,10 @@
                     inputRef.current.focus();
                 }
             }, [category?.editMode])
+
+            if (isRoot) {
+                getRootBlockRef(blockRef);
+            }
 
             const setCategory = (replacer) => {
                 setCategories(prev => {
@@ -538,9 +562,9 @@
             return (
                 <div className={withPositionClasses("container subcategory") + animationClass}> 
                     { /* category */}
-                    <div ref={blockRef} className="row">
+                    <div className="row">
                         <div className="container">
-                            <div style={blockStyle} className='block'>
+                            <div style={blockStyle} className='block'  ref={blockRef}>
                                 {!isRoot && <span className="block__head"></span>} 
                                 {category?.editMode ?
                                     <input
@@ -580,9 +604,11 @@
                 </div>
             )
         }   
-  
+        const blockElementRef = {current: null};
 
-        ReactDOM.createRoot(document.getElementById('app')).render(<Draggable> <Contaiter isRoot isSingle /> </Draggable> );
+        ReactDOM.createRoot(document.getElementById('app')).render(<Draggable dragAreaRef={blockElementRef}> <Contaiter getRootBlockRef={(ref) => {
+            blockElementRef.current = ref.current;
+        }} isRoot isSingle /> </Draggable>);
     </script>
   </body>
 </html>
