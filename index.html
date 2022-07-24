@@ -352,10 +352,10 @@
                 cursor:cursor
             }
 
-            function dragStart(e) {
+            function dragStart(e, touch) {
                 if (e.target === dragAreaRef.current) {
                     setCursor("grabbing");
-                    e.preventDefault()
+                    !touch && e.preventDefault();
                 }
 
                 if (e.target !== dragAreaRef.current) return;
@@ -416,7 +416,7 @@
                         dragStart(e);
                     }}
                     onTouchStart={(e) => {
-                        dragStart(e.touches[0]);
+                        dragStart(e.touches[0], true);
                     }}
                     draggable={false}
                 >
